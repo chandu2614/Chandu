@@ -1,48 +1,66 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <meta charset="utf-8" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>3D Villa Viewer</title>
-    <script src="https://cdn.babylonjs.com/babylon.js"></script>
+    <script src="https://cdn.babylonjs.com/babylonjs.min.js"></script>
     <style>
-        html, body { 
-            height: 100%;
-            margin: 0;
-            overflow: hidden;
-        }
-        canvas { 
+        canvas {
             width: 100%;
             height: 100%;
+            display: block;
+        }
+        #ui-panel {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(255, 255, 255, 0.8);
+            padding: 10px;
+            border-radius: 5px;
         }
     </style>
 </head>
 <body>
-    <canvas id="canvas"></canvas>
+    <div id="ui-panel">
+        <button onclick="setFloor('ground')">Ground Floor</button>
+        <button onclick="setFloor('second')">Second Floor</button>
+    </div>
+    <canvas id="renderCanvas"></canvas>
     <script>
-        var canvas = document.getElementById('canvas');
-        var engine = new BABYLON.Engine(canvas, true);
+        const canvas = document.getElementById('renderCanvas');
+        const engine = new BABYLON.Engine(canvas, true);
+        const scene = new BABYLON.Scene(engine);
+        const camera = new BABYLON.ArcRotateCamera('camera', Math.PI / 2, Math.PI / 4, 10, new BABYLON.Vector3(0, 0, 0), scene);
+        camera.attachControl(canvas, true);
 
-        var createScene = function() {
-            var scene = new BABYLON.Scene(engine);
-            var camera = new BABYLON.ArcRotateCamera('camera', Math.PI / 2, Math.PI / 2, 5, new BABYLON.Vector3(0, 0, 0), scene);
-            camera.attachControl(canvas, true);
+        const light = new BABYLON.HemisphericLight('light1', new BABYLON.Vector3(1, 1, 0), scene);
 
-            var light = new BABYLON.HemisphericLight('light', new BABYLON.Vector3(1, 1, 0), scene);
+        const villaGroundFloor = BABYLON.MeshBuilder.CreateBox('ground', {size: 4}, scene);
+        const villaSecondFloor = BABYLON.MeshBuilder.CreateBox('second', {size: 4, height: 3}, scene);
+        villaSecondFloor.position.y = 3;
 
-            // Example Villa Model
-            BABYLON.SceneLoader.Append('https://your_villa_model_url.glb', null, scene, function (scene) {
-                console.log('Villa loaded!');
-            });
+        let currentFloor = 'ground';
 
-            return scene;
+        window.setFloor = function(floor) {
+            if (floor === 'ground') {
+                villaGroundFloor.visibility = 1;
+                villaSecondFloor.visibility = 0;
+                currentFloor = 'ground';
+            } else if (floor === 'second') {
+                villaGroundFloor.visibility = 0;
+                villaSecondFloor.visibility = 1;
+                currentFloor = 'second';
+            }
         };
 
-        var scene = createScene();
-        engine.runRenderLoop(function() {
+        setFloor(currentFloor);
+
+        engine.runRenderLoop(() => {
             scene.render();
         });
 
-        window.addEventListener('resize', function() {
+        window.addEventListener('resize', () => {
             engine.resize();
         });
     </script>
